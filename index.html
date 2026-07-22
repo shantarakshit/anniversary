@@ -764,7 +764,7 @@
 
   let ytPlayer    = null;
   let ytReady     = false;
-  let pendingPlay = false;
+  let pendingPlay = true;
 
   function loadYTApi() {
     if (document.querySelector('script[src*="iframe_api"]')) return;
@@ -779,7 +779,7 @@
       playerVars: {
         listType: 'playlist',
         list: 'QPJD-tutyqw2o9h_xjyX5f-63waVLv4Worj',
-        autoplay: 0,
+        autoplay: 1,
         controls: 0,
       },
       events: {
@@ -796,9 +796,20 @@
     });
   };
 
+  loadYTApi();
+
+  function tryStartOnFirstInteraction() {
+    if (!ytPlayer || !ytReady) { pendingPlay = true; return; }
+    if (ytPlayer.getPlayerState() !== YT.PlayerState.PLAYING) {
+      ytPlayer.playVideo();
+    }
+  }
+  ['click', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
+    window.addEventListener(evt, tryStartOnFirstInteraction, { once: true, passive: true });
+  });
+
   musicBtn.addEventListener('click', () => {
     if (!ytPlayer) {
-      loadYTApi();
       pendingPlay = true;
       return;
     }
