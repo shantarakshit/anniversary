@@ -430,8 +430,10 @@
       opacity: 0;
       transform: translateY(8px);
       pointer-events: none;
+      cursor: pointer;
       transition: opacity .4s ease, transform .4s ease;
     }
+    #music-toast.show { pointer-events: auto; }
     #music-toast.show {
       opacity: 1;
       transform: translateY(0);
@@ -843,7 +845,7 @@
     });
   };
 
-  musicBtn.addEventListener('click', () => {
+  function toggleMusic() {
     hideMusicNudge();
 
     if (!ytPlayer) {
@@ -859,7 +861,9 @@
     } else {
       ytPlayer.playVideo();
     }
-  });
+  }
+  musicBtn.addEventListener('click', toggleMusic);
+  musicToast.addEventListener('click', toggleMusic);
 </script>
 </body>
 </html>
