@@ -823,14 +823,11 @@
 
   window.onYouTubeIframeAPIReady = function () {
     ytPlayer = new YT.Player('yt-el', {
-      // Official VEVO video for "In Your Love" — the auto-generated Topic-channel
-      // audio track (and the YouTube Music 'QP...' mix ID that pointed at it)
-      // both disallow embedding (YT error 150). This upload allows it.
-      videoId: 'II-L8Hq0_i4',
+      videoId: 'urWuPrI8gkw',
       playerVars: {
         autoplay: 0,
         controls: 0,
-        playsinline: 1, // prevents iOS from forcing native fullscreen on play
+        playsinline: 1,
       },
       events: {
         onReady(e) {
