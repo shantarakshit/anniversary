@@ -405,7 +405,46 @@
       justify-content: center;
     }
     #music-btn:hover { transform: scale(1.12); background: var(--pink); }
+    #music-btn.pulse { animation: music-pulse 1.8s ease-out infinite; }
+    @keyframes music-pulse {
+      0%   { box-shadow: 0 4px 16px rgba(201,122,150,.42), 0 0 0 0 rgba(232,160,180,.55); }
+      70%  { box-shadow: 0 4px 16px rgba(201,122,150,.42), 0 0 0 16px rgba(232,160,180,0); }
+      100% { box-shadow: 0 4px 16px rgba(201,122,150,.42), 0 0 0 0 rgba(232,160,180,0); }
+    }
 
+    /* ── MUSIC TOAST ── */
+    #music-toast {
+      position: fixed;
+      bottom: 5.6rem;
+      right: 2rem;
+      max-width: 220px;
+      background: var(--warm-white);
+      border: 1px solid var(--pink-light);
+      border-radius: 14px;
+      padding: .65rem .9rem;
+      font-family: 'Lato', sans-serif;
+      font-size: .82rem;
+      color: var(--text-mid);
+      box-shadow: 0 6px 20px rgba(61,43,31,.16);
+      z-index: 200;
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity .4s ease, transform .4s ease;
+    }
+    #music-toast.show {
+      opacity: 1;
+      transform: translateY(0);
+      animation: toast-bob 2.4s ease infinite;
+    }
+    @keyframes toast-bob {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-4px); }
+    }
+
+    @media (max-width: 480px) {
+      #music-toast { right: 1.2rem; bottom: 5.2rem; max-width: 180px; font-size: .78rem; }
+    }
 
     /* ── FOOTER ── */
     footer {
@@ -696,7 +735,8 @@
 </div>
 
 <!-- ═══ MUSIC BTN ═══ -->
-<button id="music-btn" title="Play Lauren's playlist">♪</button>
+<button id="music-btn" class="pulse" title="Play Lauren's playlist">♪</button>
+<div id="music-toast">🎵 tap for the music</div>
 
 <!-- YouTube player -->
 <div id="yt-el" style="position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;"></div>
@@ -760,11 +800,19 @@
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLb(); });
 
   /* ── MUSIC PLAYER ── */
-  const musicBtn = document.getElementById('music-btn');
+  const musicBtn   = document.getElementById('music-btn');
+  const musicToast = document.getElementById('music-toast');
 
   let ytPlayer    = null;
   let ytReady     = false;
-  let pendingPlay = true;
+  let pendingPlay = false;
+
+  function hideMusicNudge() {
+    musicBtn.classList.remove('pulse');
+    musicToast.classList.remove('show');
+  }
+
+  setTimeout(() => musicToast.classList.add('show'), 1200);
 
   function loadYTApi() {
     if (document.querySelector('script[src*="iframe_api"]')) return;
@@ -775,12 +823,14 @@
 
   window.onYouTubeIframeAPIReady = function () {
     ytPlayer = new YT.Player('yt-el', {
-      videoId: '6TIZQO9m9nQ',
+      // Official VEVO video for "In Your Love" — the auto-generated Topic-channel
+      // audio track (and the YouTube Music 'QP...' mix ID that pointed at it)
+      // both disallow embedding (YT error 150). This upload allows it.
+      videoId: 'II-L8Hq0_i4',
       playerVars: {
-        listType: 'playlist',
-        list: 'QPJD-tutyqw2o9h_xjyX5f-63waVLv4Worj',
-        autoplay: 1,
+        autoplay: 0,
         controls: 0,
+        playsinline: 1, // prevents iOS from forcing native fullscreen on play
       },
       events: {
         onReady(e) {
@@ -796,20 +846,11 @@
     });
   };
 
-  loadYTApi();
-
-  function tryStartOnFirstInteraction() {
-    if (!ytPlayer || !ytReady) { pendingPlay = true; return; }
-    if (ytPlayer.getPlayerState() !== YT.PlayerState.PLAYING) {
-      ytPlayer.playVideo();
-    }
-  }
-  ['click', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
-    window.addEventListener(evt, tryStartOnFirstInteraction, { once: true, passive: true });
-  });
-
   musicBtn.addEventListener('click', () => {
+    hideMusicNudge();
+
     if (!ytPlayer) {
+      loadYTApi();
       pendingPlay = true;
       return;
     }
